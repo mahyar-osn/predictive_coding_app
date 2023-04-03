@@ -128,7 +128,72 @@ Note that each time that you run the simulation, a newly random data is generate
 """
 
 exp_two = r"""
+Figure below illustrates the free-body diagram of the pendulum simulated in our experiment, highlighting mass, 
+length, gravity, and force vectors affecting the system. The pendulum's dynamics can be expressed using the 
+rotatio motion equation:
 
+\begin{align}
+\label{rotational_motion}
+\tau = I \alpha
+\end{align}
 
+This equation is a slight modification of Newton's second Law of Motion ($F = ma$). In this case,
+ $\tau$ represents torque, which is the force's perpendicular component on the mass; $I$ denotes rotational inertia,
+  equal to $mL^2$ where $m$ is the mass attached to a string of length $L$; and $\alpha$ signifies angular acceleration,
+   calculated by the second time derivative of $\theta$, the angle between gravity and force vectors. 
+   Consequently, Equation \ref{rotational_motion} can be rewritten as:
 
+$$
+-mgL\sin(\theta) = mL^2 \ddot{\theta}
+$$
+$$
+\Rightarrow mL^2 \ddot{\theta} -mgL\sin(\theta) = 0
+$$
+
+Here, $g$ denotes gravity. We excluded a damping parameter in these equations since our simulations do not involve
+damping. The second-order ODE was converted into two first-order equations by introducing $\theta_1$ and
+$\theta_2$ for angular displacement and angular velocity, respectively:
+
+$$
+\theta_1 = \theta
+$$
+$$
+\theta_2 = \dot{\theta}
+$$
+From this, we can derive the first-order equations:
+
+$$
+\dot{\theta_1} = \theta_2
+$$
+$$
+\dot{\theta_2} = - \frac{g}{L} \sin(\theta_1)
+$$
+"""
+
+exp_two_pendulum = r"""
+Now let's try the pendulum experiment!
+
+System variables are initialized as follows: 
+
+- $g$ = $9.81 m/s^{2}$, 
+- $L$ = 3.0 m, and 
+- $m$ = 0.1 kg.
+
+We will simulate the system as an initial value problem by numerically integrating the equations using the 
+explicit Runge-Kutta method for 2500 seconds with $dt$ = 0.1 second time steps and initial values of
+$\theta_1$ = 1.8 rad and $\theta_2$ = 2.2 rad/s. These values are chosen to simulate pendulum motion
+with a large amplitude of oscillation, pushing the system into a more nonlinear regime. We also introduced
+zero-mean Gaussian noise with a variance of 0.1 to the pendulum simulation. For training, the pendulum 
+simulations' solutions (angular displacement and angular velocity) are utilized as ground truth. Parameters
+$C$ and $A$ are initialized as an identity matrix and zero, respectively, and learning is conducted as in
+the previous experiment (i.e., Synthetic Stimuli).
+
+Choose an activation function and press Run Experiment 2!
+"""
+
+exp_two_result = r"""
+The figure presents the results using the phase portrait of the system. The phase portrait is created 
+by computing the derivatives of $\frac{d \theta_1}{dk}$ and $\frac{d \theta_1}{dk}$ at $t = 0$ on a grid of 30 points 
+over the range of $-\pi$ to $+\pi$ and -4 to +4 for $\theta_1$ and $\theta_2$, respectively. The solutions of 
+the ground-truth simulation and our temporal prediction coding are plotted on the vector field for the final 80 seconds.
 """
