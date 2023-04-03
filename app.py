@@ -1,20 +1,19 @@
 import streamlit as st
 
+import altair as alt
+import pandas as pd
+
 import numpy as np
 import plotly.graph_objects as go
 
-from utils.simulations import run_tracking_learning, run_tracking_inf_steps, run_simulation_random_data_np
-from utils.contents import intro, theory, kalman, kalman_figure, matrix_learning, nonlinear_intro, exp_one, exp_two
+from utils.simulations import run_tracking_learning, run_tracking_inf_steps, run_simulation_random_data_np, \
+    run_pendulum_simulation, pendulum_equation
+from utils.contents import intro, theory, kalman, kalman_figure, matrix_learning, nonlinear_intro, exp_one, exp_two, \
+    exp_two_pendulum, exp_two_result
 
 # Set up the page configuration
 st.set_page_config(page_title='Temporal Predictive Coding', layout='centered', initial_sidebar_state='collapsed',
                    page_icon=None)
-
-if "button1_clicked" not in st.session_state:
-    st.session_state.button1_clicked = False
-
-if "button2_clicked" not in st.session_state:
-    st.session_state.button2_clicked = False
 
 
 # Custom CSS for dark theme
@@ -38,6 +37,32 @@ def set_custom_theme():
 
 def __moving_average(x, w):
     return np.convolve(x, np.ones(w), 'valid') / w
+
+
+def create_pendulum_animation_altair(time, ground_truth, pred_sol_nl, current_time_step):
+    L = 3
+    x_ground_truth = L * np.sin(ground_truth[0, :])
+    y_ground_truth = -L * np.cos(ground_truth[0, :])
+    x_pred_sol_nl = L * np.sin(pred_sol_nl[0, :])
+    y_pred_sol_nl = -L * np.cos(pred_sol_nl[0, :])
+
+    data = pd.DataFrame({'time': np.tile(time[-20:], 2),
+                         'x': np.hstack((x_ground_truth[-20:], x_pred_sol_nl[-20:])),
+                         'y': np.hstack((y_ground_truth[-20:], y_pred_sol_nl[-20:])),
+                         'type': np.repeat(['Ground truth', 'Predicted'], 20)})
+
+    chart = alt.Chart(data).mark_circle(size=100).encode(
+        x=alt.X('x:Q', scale=alt.Scale(domain=(-L, L))),
+        y=alt.Y('y:Q', scale=alt.Scale(domain=(-L, L))),
+        color='type:N'
+    ).properties(
+        width=600,
+        height=600
+    ).transform_filter(
+        alt.expr.datum.time == current_time_step
+    )
+
+    return chart
 
 
 def main():
@@ -153,7 +178,7 @@ def main():
         timepoints = st.number_input("Timepoints", min_value=1000, max_value=5500, value=4000, step=1, format="%i")
 
     # Create the "Run simulation" button
-    if st.button("Run simulation"):
+    if st.button("Run experiment 1"):
         with st.spinner("Running..."):
             solution, error = run_simulation_random_data_np(activation, timepoints)
 
@@ -195,7 +220,72 @@ def main():
     st.subheader("Experiment 2: Pendulum simulation")
     st.markdown(exp_two)
     image_file = "resources/pendulum.png"
-    st.image(image_file, caption="A free-body diagram of the pendulum used in this experiment", use_column_width=True)
+    col = st.columns(3)
+    with col[1]:
+        st.image(image_file, caption="", use_column_width='auto')
+
+    st.markdown(exp_two_pendulum)
+
+    # Create columns for the input fields
+    input_pen_columns = st.columns(2)
+
+    # Add the input fields within the columns
+    with input_pen_columns[0]:
+        pen_activation = st.selectbox("Activation function", ["Linear", "Non-linear"])
+        if pen_activation == "Linear":
+            pen_activation = "linear"
+        else:
+            pen_activation = "nonlinear"
+    flag = False
+    with input_pen_columns[0]:
+        if st.button("Run experiment 2"):
+            flag = True
+            with st.spinner("Running..."):
+                time, ground_truth, pred_sol_nl, et, sol, step, data_pred_nl = run_pendulum_simulation(pen_activation)
+                fn = 80
+                ff = sol[0].shape[0] - fn
+                X, Y = np.mgrid[(-np.pi):np.pi:-30j, -4:4:30j]
+                stt = 0  # start time (s)
+                tss = step  # time step (s)
+                theta1_init = 1.8  # initial angular displacement (rad)
+                theta2_init = 2.2  # initial angular velocity (rad/s)
+                theta_init = [theta1_init, theta2_init]
+                t_span = [stt, et + stt]
+                U, V = pendulum_equation(t_span, [X, Y])
+
+                fig = go.Figure()
+
+                # Quiver plot
+                fig.add_trace(go.Cone(x=X.ravel(), y=Y.ravel(), u=U.ravel(), v=V.ravel(), sizemode='scaled',
+                                      sizeref=0.2, showscale=False, colorscale='Viridis'))
+
+                # True line
+                fig.add_trace(go.Scatter(x=sol[1, ff:], y=sol[0, ff:], mode='lines', name='True',
+                                         line=dict(width=3)))
+
+            fig.add_trace(
+                go.Scatter(x=data_pred_nl[0, ff:], y=data_pred_nl[1, ff:], mode='lines',
+                           name=f'Inferred ({pen_activation})',
+                           line=dict(width=3)))
+            fig.update_layout(
+                width=600,
+                height=600,
+                title='Mean phase portrait',
+                xaxis=dict(title=r'$\theta_1$', showgrid=True, gridwidth=0.5),
+                yaxis=dict(title=r'$\theta_2$', showgrid=True, gridwidth=0.5),
+                legend=dict(x=1, y=1, bgcolor='rgba(255, 255, 255, 0)', bordercolor='rgba(255, 255, 255, 0)')
+            )
+
+            st.plotly_chart(fig)
+    if flag:
+        st.markdown(exp_two_result)
+
+    st.subheader("References:")
+    st.markdown(r"""
+    📰 Please refer to the original study for full detail [PLACEHOLDER URL].
+    
+    🐙 Visit our [GitHub page](https://github.com/C16Mftang/temporal-predictive-coding) for the source code of tPC.
+    """)
 
 
 if __name__ == '__main__':
