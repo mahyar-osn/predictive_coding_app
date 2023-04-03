@@ -132,10 +132,9 @@ Figure below illustrates the free-body diagram of the pendulum simulated in our 
 length, gravity, and force vectors affecting the system. The pendulum's dynamics can be expressed using the 
 rotatio motion equation:
 
-\begin{align}
-\label{rotational_motion}
+$$
 \tau = I \alpha
-\end{align}
+$$
 
 This equation is a slight modification of Newton's second Law of Motion ($F = ma$). In this case,
  $\tau$ represents torque, which is the force's perpendicular component on the mass; $I$ denotes rotational inertia,
