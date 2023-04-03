@@ -67,7 +67,7 @@ def create_pendulum_animation_altair(time, ground_truth, pred_sol_nl, current_ti
 
 def main():
     # Apply the custom theme
-    set_custom_theme()  # Introduction section
+    # set_custom_theme()  # Introduction section
     st.title("Temporal Predictive Coding in the Brain 🧠")
     st.write(intro)
 
