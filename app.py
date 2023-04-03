@@ -219,7 +219,7 @@ def main():
     # Pendulum
     st.subheader("Experiment 2: Pendulum simulation")
     st.markdown(exp_two)
-    image_file = "resources/pendulum.png"
+    image_file = "resources/pendulum-dark.png"
     col = st.columns(3)
     with col[1]:
         st.image(image_file, caption="", use_column_width='auto')
