@@ -81,7 +81,7 @@ def main():
 
     kalman_columns = st.columns(2)
     with kalman_columns[0]:
-        step_size = st.number_input("Step Size", min_value=1, max_value=10, value=1, step=1, format="%i")
+        step_size = st.number_input("👉 Step Size", min_value=1, max_value=10, value=1, step=1, format="%i")
     with st.spinner("Running..."):
         zs, zs_nkf, zs_kf = run_tracking_inf_steps(step_size)
     plot_columns = st.columns(2)
@@ -106,9 +106,9 @@ def main():
     ac_columns = st.columns(2)
     col1, col2 = st.columns(2)
     with ac_columns[0]:
-        init_w = st.selectbox("Initial weights", ["True", "Learn", "Random"])
+        init_w = st.selectbox("◻️◽▪️ Initial weights", ["True", "Learn", "Random"])
     with ac_columns[0]:
-        if st.button("Run experiment"):
+        if st.button("Run experiment 🧪"):
             if init_w == "True":
                 prompt = "Using true A & C. This should be relatively quick..."
             elif init_w == "Learn":
@@ -168,17 +168,17 @@ def main():
 
     # Add the input fields within the columns
     with input_columns[0]:
-        activation = st.selectbox("Activation", ["Linear", "Non-linear"])
+        activation = st.selectbox("🧮 Activation", ["Linear", "Non-linear"])
         if activation == "Linear":
             activation = "linear"
         else:
             activation = "nonlinear"
 
     with input_columns[1]:
-        timepoints = st.number_input("Timepoints", min_value=1000, max_value=5500, value=4000, step=1, format="%i")
+        timepoints = st.number_input("⌛ Timepoints", min_value=1000, max_value=5500, value=4000, step=1, format="%i")
 
     # Create the "Run simulation" button
-    if st.button("Run experiment 1"):
+    if st.button("Run experiment 1 🧪"):
         with st.spinner("Running..."):
             solution, error = run_simulation_random_data_np(activation, timepoints)
 
@@ -231,14 +231,14 @@ def main():
 
     # Add the input fields within the columns
     with input_pen_columns[0]:
-        pen_activation = st.selectbox("Activation function", ["Linear", "Non-linear"])
+        pen_activation = st.selectbox("🧮 Activation function", ["Linear", "Non-linear"])
         if pen_activation == "Linear":
             pen_activation = "linear"
         else:
             pen_activation = "nonlinear"
     flag = False
     with input_pen_columns[0]:
-        if st.button("Run experiment 2"):
+        if st.button("Run experiment 2 🧪"):
             flag = True
             with st.spinner("Running..."):
                 time, ground_truth, pred_sol_nl, et, sol, step, data_pred_nl = run_pendulum_simulation(pen_activation)
