@@ -2,12 +2,12 @@ import random
 
 import torch
 import numpy as np
+from scipy.integrate import solve_ivp
 
 
-from src.utils import *
-from src.np_implementation.model import TPC
-from src.models import NeuralKalmanFilter, KalmanFilter
-from src.np_implementation.data import generate_random_nonlinear_data
+from utils.models import TPC
+from utils.models import NeuralKalmanFilter, KalmanFilter
+from utils.data import generate_random_nonlinear_data
 
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -194,3 +194,70 @@ def run_tracking_learning(input_weights):
         zs_kf, xs_kf = kf.inference(xs, us)
 
     return zs_kf, xs_kf, zs_nkf, xs_nkf, zs, xs
+
+
+def pendulum_equation(t, theta):
+    g = 9.81  # gravity acceleration (m/s^2)
+    L = 3  # length of pendulum (m)
+    b = 0.0  # damping factor (kg/s)
+    m = 0.1  # mass (kg)
+
+    dtheta2_dt = -(b / m * theta[1]) - (g / L * np.sin(theta[0]))
+    dtheta1_dt = theta[1]
+
+    return [dtheta1_dt, dtheta2_dt]
+
+
+def __run_pendulum_simulation(integration_step, et):
+    # initial and end values:
+    st = 0  # start time (s)
+    # et = 2500.4            # end time (s)
+    ts = integration_step  # time step (s)
+
+    theta1_init = 1.8  # initial angular displacement (rad)
+    theta2_init = 2.2  # initial angular velocity (rad/s)
+    theta_init = [theta1_init, theta2_init]
+    t_span = [st, et + st]
+    t = np.arange(st, et + st, ts)
+    sim_points = len(t)
+    l = np.arange(0, sim_points, 1)
+
+    theta12 = solve_ivp(pendulum_equation, t_span, theta_init, t_eval=t)
+
+    return theta12, t
+
+
+def run_pendulum_simulation(activation):
+    step = dt = 0.1
+    et = 2500.4  # end time (s)
+    ground_truth, time = __run_pendulum_simulation(step, et)
+    np.random.seed(random.randint(0, 200))
+    ground_truth.y[0, :] += np.random.normal(0, 0.1, ground_truth.y[0].shape)
+    ground_truth.y[1, :] += np.random.normal(0, 0.1, ground_truth.y[0].shape)
+
+    sol = np.zeros((ground_truth.y.shape[0], ground_truth.y.shape[1]))
+    sol[0, :] = ground_truth.y[1, :]
+    sol[1, :] = ground_truth.y[0, :]
+
+    theta1 = ground_truth.y[0, :]  # angular displacement
+    theta2 = ground_truth.y[1, :]  # angular velocity
+
+    # use nonlinear model
+    A = np.zeros((ground_truth.y.shape[0], ground_truth.y.shape[0]))
+    C = np.eye(ground_truth.y.shape[0])
+    if activation == 'nonlinear':
+        k1 = 8.5
+        k2 = 0.9
+        decay = 300
+    else:
+        k1 = 0.01
+        k2 = 0.09
+        decay = 500
+    tpc = TPC(ground_truth.y, A, C, activation=activation, dt=0.1, k1=k1, k2=k2)
+    tpc.forward(C_decay=decay)
+    data_pred_nl = tpc.get_predictions()
+    pred_sol_nl = np.zeros((ground_truth.y.shape[0], ground_truth.y.shape[1]))
+    pred_sol_nl[0, :] = data_pred_nl[1, :]
+    pred_sol_nl[1, :] = data_pred_nl[0, :]
+
+    return time, ground_truth.y, pred_sol_nl, et, sol, step, data_pred_nl
