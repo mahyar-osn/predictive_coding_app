@@ -280,7 +280,7 @@ def main():
     if flag:
         st.markdown(exp_two_result)
 
-    st.subheader("References:")
+    st.header("References:")
     st.markdown(r"""
     📰 Please refer to the original study for full detail [PLACEHOLDER URL].
     
