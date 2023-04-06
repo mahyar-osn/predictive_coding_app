@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit.components.v1 import html
 
 import altair as alt
 import pandas as pd
@@ -14,6 +15,22 @@ from utils.contents import intro, theory, kalman, kalman_figure, matrix_learning
 # Set up the page configuration
 st.set_page_config(page_title='Temporal Predictive Coding', layout='centered', initial_sidebar_state='collapsed',
                    page_icon=None)
+
+
+def apply_custom_css_selection_box():
+    custom_css = """
+    <style>
+        .stSelectbox select {
+            background-color: #2E2E2E;
+            color: #F0F0F0;
+        }
+        .stSelectbox option {
+            background-color: #2E2E2E;
+            color: #F0F0F0;
+        }
+    </style>
+    """
+    html(custom_css, height=0)
 
 
 # Custom CSS for dark theme
@@ -66,6 +83,7 @@ def create_pendulum_animation_altair(time, ground_truth, pred_sol_nl, current_ti
 
 
 def main():
+    apply_custom_css_selection_box()
     # Apply the custom theme
     # set_custom_theme()  # Introduction section
     st.title("Temporal Predictive Coding in the Brain 🧠")
